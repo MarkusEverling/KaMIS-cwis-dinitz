@@ -20,14 +20,14 @@ As a first step, please run *git submodule update  --init --recursive*. Then com
 
 To convert a graph from DIMACS to METIS format or sort its edges you can use the python scripts in the *misc* folder.
 
-The version of our framework currently contains the following algorithms:
-* struction -- a branch and reduce algotrithm with increasing transformations
+This version of our framework currently contains the following algorithms:
+* struction -- a branch and reduce algorithm with increasing transformations
 * mmwis -- run an iterative reduce and evolution algorithm for the weighted problem
 * redumis -- run an evolutionary algorithm on a reduced graph 
 * onlinemis -- local search pruned with reductions
-* weighted_branch_reduce -- a branch and reduce algorithm for weighed maximum independent sets
-* weighted_local_search -- a local search algorithm for weighed maximum independent sets
-* If you want to use the solver that one the vertex cover track of the PACE Challenge, go here <https://github.com/KarlsruheMIS/pace-2019>
+* weighted_branch_reduce -- a branch and reduce algorithm for weighted maximum independent sets
+* weighted_local_search -- a local search algorithm for weighted maximum independent sets
+* If you want to use the solver that won the vertex cover track of the PACE Challenge, go here <https://github.com/KarlsruheMIS/pace-2019>
 
 Furthermore, the framework contains tools to make life a little bit easier:
 * sort_adjacencies -- takes a graph file and sorts the neighborhoods of vertices (this is required by our algorithms) 
