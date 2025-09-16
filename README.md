@@ -1,3 +1,6 @@
+# NOTE
+All changes related to the CWIS reduction have been made in the `mmwis` directory and are described in its `README.md`.
+
 # KaMIS v3.0 #
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/29cd8870a6b041948dbf001d0f427f83)](https://app.codacy.com/gh/KarlsruheMIS/KaMIS?utm_source=github.com&utm_medium=referral&utm_content=KarlsruheMIS/KaMIS&utm_campaign=Badge_Grade_Dashboard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

@@ -83,6 +83,7 @@ set(MMWIS ${CMAKE_CURRENT_SOURCE_DIR})
 set(MMWIS_INCLUDES
     ${MMWIS}/app
     ${MMWIS}/lib
+    ${MMWIS}/lib/algorithms
     ${MMWIS}/lib/data_structure
     ${MMWIS}/lib/data_structure/priority_queues
     ${MMWIS}/lib/mis
@@ -150,6 +151,13 @@ add_executable(mmwis "app/mmwis.cpp" $<TARGET_OBJECTS:libkaffpa>
                                      $<TARGET_OBJECTS:lib_mmwis> )
 target_include_directories(mmwis PRIVATE ${MMWIS_INCLUDES})
 target_link_libraries(mmwis ${OpenMP_CXX_LIBRARIES})
+
+add_executable(weighted_reduce "app/weighted_reduce.cpp" $<TARGET_OBJECTS:libkaffpa> 
+                                     $<TARGET_OBJECTS:libmapping> 
+                                     $<TARGET_OBJECTS:libnodeordering>
+                                     $<TARGET_OBJECTS:lib_mmwis> )
+target_include_directories(weighted_reduce PRIVATE ${MMWIS_INCLUDES})
+target_link_libraries(weighted_reduce ${OpenMP_CXX_LIBRARIES})
 
 install(TARGETS mmwis DESTINATION bin)
 

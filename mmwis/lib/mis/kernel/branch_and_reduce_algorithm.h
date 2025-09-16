@@ -27,6 +27,8 @@
 #include <iostream>
 #include <sstream>
 
+class dinitz_flow_graph;
+
 namespace mmwis {
 
 class branch_and_reduce_algorithm {
@@ -50,8 +52,7 @@ private:
 	friend heavy_set_reduction;
 	friend generalized_neighborhood_reduction;
 	friend generalized_fold_reduction;
-
-
+	friend dinitz_flow_graph;
 
 	struct node_pos {
 		NodeID node;

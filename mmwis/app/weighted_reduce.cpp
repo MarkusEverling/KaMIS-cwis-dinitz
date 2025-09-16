@@ -18,7 +18,7 @@
 #include "timer.h"
 #include "ils/ils.h"
 #include "ils/local_search.h"
-#include "mis_log.h"
+#include "mmwis_log.h"
 #include "graph_access.h"
 #include "graph_io.h"
 #include "mmwis_config.h"
@@ -71,8 +71,8 @@ bool is_IS(graph_access& G) {
 
 std::vector<NodeID> reverse_mapping;
 
-NodeWeight perform_reduction(std::unique_ptr<branch_and_reduce_algorithm>& reducer, graph_access& G, graph_access& rG, const MISConfig& config) {
-	reducer = std::unique_ptr<branch_and_reduce_algorithm>(new branch_and_reduce_algorithm(G, config));
+NodeWeight perform_reduction(std::unique_ptr<mmwis::branch_and_reduce_algorithm>& reducer, graph_access& G, graph_access& rG, const mmwis::MISConfig& config) {
+	reducer = std::unique_ptr<mmwis::branch_and_reduce_algorithm>(new mmwis::branch_and_reduce_algorithm(G, config, false));
 	reducer->reduce_graph();
 
 	// Retrieve reduced graph
@@ -91,21 +91,21 @@ NodeWeight perform_reduction(std::unique_ptr<branch_and_reduce_algorithm>& reduc
 }
 
 
-void assign_weights(graph_access& G, const MISConfig& mis_config) {
+void assign_weights(graph_access& G, const mmwis::MISConfig& mis_config) {
 	constexpr NodeWeight MAX_WEIGHT = 200;
 
-	if (mis_config.weight_source == MISConfig::Weight_Source::HYBRID) {
+	if (mis_config.weight_source == mmwis::MISConfig::Weight_Source::HYBRID) {
 		forall_nodes(G, node) {
 			G.setNodeWeight(node, (node + 1) % MAX_WEIGHT + 1);
 		} endfor
-	} else if (mis_config.weight_source == MISConfig::Weight_Source::UNIFORM) {
+	} else if (mis_config.weight_source == mmwis::MISConfig::Weight_Source::UNIFORM) {
 		std::default_random_engine generator(mis_config.seed);
   		std::uniform_int_distribution<NodeWeight> distribution(1,MAX_WEIGHT);
 
 		forall_nodes(G, node) {
 			G.setNodeWeight(node, distribution(generator));
 		} endfor
-	} else if (mis_config.weight_source == MISConfig::Weight_Source::GEOMETRIC) {
+	} else if (mis_config.weight_source == mmwis::MISConfig::Weight_Source::GEOMETRIC) {
 		std::default_random_engine generator(mis_config.seed);
   		std::binomial_distribution<int> distribution(MAX_WEIGHT / 2);
 
@@ -113,7 +113,7 @@ void assign_weights(graph_access& G, const MISConfig& mis_config) {
 			G.setNodeWeight(node, distribution(generator));
 		} endfor
 	
-	} else if (mis_config.weight_source == MISConfig::Weight_Source::UNIT) {
+	} else if (mis_config.weight_source == mmwis::MISConfig::Weight_Source::UNIT) {
 		forall_nodes(G, node) {
 			G.setNodeWeight(node, 1);
 		} endfor
@@ -122,10 +122,10 @@ void assign_weights(graph_access& G, const MISConfig& mis_config) {
 
 
 int main(int argn, char **argv) {
-    mis_log::instance()->restart_total_timer();
-    //mis_log::instance()->print_title();
+    mmwis::mmwis_log::instance()->restart_total_timer();
+    //mmwis::mmwis_log::instance()->print_title();
 
-    MISConfig mis_config;
+    mmwis::MISConfig mis_config;
     std::string graph_filepath;
 
     // Parse the command line parameters;
@@ -135,7 +135,7 @@ int main(int argn, char **argv) {
     }
 
     mis_config.graph_filename = graph_filepath.substr(graph_filepath.find_last_of( '/' ) +1);
-    mis_log::instance()->set_config(mis_config);
+    mmwis::mmwis_log::instance()->set_config(mis_config);
     std::string name = mis_config.graph_filename.substr(0, mis_config.graph_filename.find_last_of('.'));
     std::string path = graph_filepath.substr(0,graph_filepath.find_last_of('/'));
 
@@ -144,10 +144,10 @@ int main(int argn, char **argv) {
     graph_io::readGraphWeighted(G, graph_filepath);
 	assign_weights(G, mis_config);
 
-    mis_log::instance()->set_graph(G);
+    mmwis::mmwis_log::instance()->set_graph(G);
 
    NodeWeight weight_offset = 0;
-   std::unique_ptr<branch_and_reduce_algorithm> reducer;
+   std::unique_ptr<mmwis::branch_and_reduce_algorithm> reducer;
 
 	//if (mis_config.write_graph) {
 		//// just reduce the graph and write it into a file

@@ -5,6 +5,7 @@
 #include "reductions.h"
 #include "branch_and_reduce_algorithm.h"
 #include "data_structure/flow_graph.h"
+#include "dinitz.h"
 #include "push_relabel.h"
 #include "definitions.h"
 
@@ -231,66 +232,52 @@ bool critical_set_reduction::reduce(branch_and_reduce_algorithm* br_alg) {
 	size_t oldn = status.remaining_nodes;
 	size_t oldw = status.reduction_offset;
 
-	// build bipartite flow graph
-	// node '+ n' shows that we refer to the node in the rest[1] partition
-	flow_graph fg;
-	fg.start_construction(2 * n + 2);
-
-	const NodeID source = 2 * n;
+	dinitz_flow_graph fg(&br_alg->status);
+	const NodeID source = fg.number_of_nodes() - 2;
 	const NodeID sink = source + 1;
 
-	for (NodeID node = 0; node < n; node++) {
-		if (status.node_status[node] == IS_status::not_set) {
-			// add source and target edges
-			fg.new_edge(source, node, status.weights[node]);
-			fg.new_edge(node + n, sink, status.weights[node]);
-
-			// add edges between node and its neighbors in the other partition
-			for (NodeID neighbor : status.graph[node]) {
-				// each outgoing edge has enough capacity to support full flow of the single incoming edge into 'node'
-				fg.new_edge(node, neighbor + n, status.weights[node]);
-			}
-		}
-	}
-
-	fg.finish_construction();
-
-
 	// solve max-flow problem
-	push_relabel flow_solver;
-	std::vector<NodeID> dummy_vec;
-	flow_solver.solve_max_flow_min_cut(fg, source, sink, false, dummy_vec);
+	dinitz flow_solver;
+	flow_solver.solve_max_flow_min_cut(fg, source, sink);
 
 	auto& max_cs_set = br_alg->double_set;
 
 	max_cs_set.clear();
-	// (source, node) edges where flow < capacity indicate that node is in the maximum critical set
-	forall_out_edges(fg, edge, source) {
-		NodeID node = fg.getEdgeTarget(source, edge);
-		if (fg.getEdgeFlow(source, edge) < fg.getEdgeCapacity(source, edge)) {
-			max_cs_set.add(node);
-		}
-	} endfor
 
-		// isolated nodes in the maximum critical set form the maximum independent critical set
-		for (NodeID node = 0; node < n; node++) {
-			if (status.node_status[node] == IS_status::not_set && max_cs_set.get(node)) {
-				bool isolated = true;
-
-				for (NodeID neighbor : status.graph[node]) {
-					if (max_cs_set.get(neighbor)) {
-						isolated = false;
-						break;
-					}
-				}
-
-				//TODO: check if continue works! (was break)
-				if (!isolated) continue;
-
-				// found isolated node
-				br_alg->set(node, IS_status::included);
+	std::queue<NodeID> queue{{source}};
+	std::vector<bool> visited(fg.number_of_nodes());
+	visited[source] = true;
+	while (!queue.empty()) {
+		NodeID u = queue.front(); queue.pop();
+		if (u < n) max_cs_set.add(u);
+		for (EdgeID e = fg.get_first_edge(u), end = fg.get_first_invalid_edge(u); e < end; e++) {
+			NodeID v = fg.getEdgeTarget(u, e);
+			if (!visited[v] && fg.getEdgeFlow(u, e) < fg.getEdgeCapacity(u, e)) {
+				visited[v] = true;
+				queue.push(v);
 			}
 		}
+	}
+
+	// isolated nodes in the maximum critical set form the maximum independent critical set
+	for (NodeID node = 0; node < n; node++) {
+		if (status.node_status[node] == IS_status::not_set && max_cs_set.get(node)) {
+			bool isolated = true;
+
+			for (NodeID neighbor : status.graph[node]) {
+				if (max_cs_set.get(neighbor)) {
+					isolated = false;
+					break;
+				}
+			}
+
+			//TODO: check if continue works! (was break)
+			if (!isolated) continue;
+
+			// found isolated node
+			br_alg->set(node, IS_status::included);
+		}
+	}
 
 	// std::cout << "cs redu -> " << (oldn - status.remaining_nodes) << std::endl;
 /* 	status.critical_set_reduced_nodes += oldn-status.remaining_nodes; */
